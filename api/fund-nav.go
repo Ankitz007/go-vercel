@@ -1,4 +1,4 @@
-package mutualfunds
+package handler
 
 import (
 	"encoding/json"
@@ -6,44 +6,10 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Ankitz007/go-vercel/constant"
+	"github.com/Ankitz007/go-vercel/model"
 )
-
-// Define the base URL as a constant
-const baseURL = "https://api.mfapi.in/mf/"
-
-// Define a Fund struct to match the API response structure
-type Fund struct {
-	Meta struct {
-		FundHouse      string `json:"fund_house"`
-		SchemeType     string `json:"scheme_type"`
-		SchemeCategory string `json:"scheme_category"`
-		SchemeCode     int    `json:"scheme_code"`
-		SchemeName     string `json:"scheme_name"`
-	} `json:"meta"`
-	Data []struct {
-		Date string `json:"date"`
-		Nav  string `json:"nav"`
-	} `json:"data"`
-}
-
-// Define a Response struct for the API response
-type Response struct {
-	Meta struct {
-		FundHouse      string `json:"fund_house"`
-		SchemeType     string `json:"scheme_type"`
-		SchemeCategory string `json:"scheme_category"`
-		SchemeCode     int    `json:"scheme_code"`
-		SchemeName     string `json:"scheme_name"`
-	} `json:"meta"`
-	Period string      `json:"period,omitempty"`
-	Data   []DataPoint `json:"data"`
-}
-
-// Define a DataPoint struct for individual data points
-type DataPoint struct {
-	Date string `json:"date"`
-	Nav  string `json:"nav"`
-}
 
 // HTTP handler function to process the request
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -114,10 +80,10 @@ func isValidInteger(value string) bool {
 }
 
 // fetchFundData fetches the fund data from the API using the mutualFundID.
-func fetchFundData(mutualFundID string) (Fund, error) {
-	var fund Fund
+func fetchFundData(mutualFundID string) (model.Fund, error) {
+	var fund model.Fund
 
-	url := fmt.Sprintf("%s%s", baseURL, mutualFundID)
+	url := fmt.Sprintf("%s%s", constant.BaseURL, mutualFundID)
 	resp, err := http.Get(url)
 	if err != nil {
 		return fund, fmt.Errorf("error fetching data from API: %w", err)
@@ -179,8 +145,8 @@ func parseDates(startDate, endDate string) (time.Time, time.Time, error) {
 func filterData(data []struct {
 	Date string `json:"date"`
 	Nav  string `json:"nav"`
-}, start, end time.Time) []DataPoint {
-	var filteredData []DataPoint
+}, start, end time.Time) []model.NAVData {
+	var filteredData []model.NAVData
 
 	for _, item := range data {
 		date, err := time.Parse("02-01-2006", item.Date)
@@ -188,7 +154,7 @@ func filterData(data []struct {
 			continue
 		}
 		if (start.IsZero() && end.IsZero()) || (date.Equal(start) || date.After(start)) && (date.Equal(end) || date.Before(end)) {
-			filteredData = append(filteredData, DataPoint{Date: item.Date, Nav: item.Nav})
+			filteredData = append(filteredData, model.NAVData{Date: item.Date, Nav: item.Nav})
 		}
 	}
 
@@ -202,8 +168,8 @@ func createSuccessResponse(meta struct {
 	SchemeCategory string `json:"scheme_category"`
 	SchemeCode     int    `json:"scheme_code"`
 	SchemeName     string `json:"scheme_name"`
-}, data []DataPoint, start, end time.Time) Response {
-	response := Response{
+}, data []model.NAVData, start, end time.Time) model.Response {
+	response := model.Response{
 		Meta: meta,
 		Data: data,
 	}
