@@ -1,15 +1,13 @@
 {
-    "rewrites": [
+    "routes": [
         {
-            "source": "/api/:path*",
-            "destination": "/api/:path*"
-        }
-    ],
-    "redirects": [
+            "src": "/api/(.*)",
+            "dest": "/api/$1"
+        },
         {
-            "source": "/:path*",
-            "statusCode": 404,
-            "destination": "/404"
+            "src": "/(.*)",
+            "dest": "/pages/404.html",
+            "status": 404
         }
     ]
 }
