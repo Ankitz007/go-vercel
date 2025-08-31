@@ -9,11 +9,5 @@
             "dest": "/pages/404.html",
             "status": 404
         }
-    ],
-    "crons": [
-        {
-            "path": "/api/cron",
-            "schedule": "42 11 * * *"
-        }
     ]
 }
